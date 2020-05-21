@@ -1,0 +1,44 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:CodeMonitor.ViewModels;assembly=CodeMonitor"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="CodeMonitor.Views.MainWindow"
+        Icon="/Assets/Icons8-Windows-8-User-Interface-Two-Finger-Double-Tap.ico"
+        Title="CodeMonitor">
+  <Window.Resources>
+    <SolidColorBrush Color="White" x:Key="fg"/>
+    <SolidColorBrush Color="Gray" x:Key="bd"/>
+    <SolidColorBrush Color="Black" x:Key="bg"/>
+  </Window.Resources>
+  <Window.Styles>
+    <Style Selector="Grid">
+      <Setter Property="Background" Value="{StaticResource bg}"/>
+    </Style>
+    <Style Selector="TextBox">
+      <Setter Property="Foreground" Value="{StaticResource fg}"/>
+      <Setter Property="BorderBrush" Value="{StaticResource bd}"/>
+      <Setter Property="Background" Value="{StaticResource bg}"/>
+    </Style>
+    <Style Selector="Button">
+      <Setter Property="Foreground" Value="{StaticResource fg}"/>
+      <Setter Property="Background" Value="{StaticResource bg}"/>
+      <Setter Property="BorderBrush" Value="{StaticResource bd}"/>
+    </Style>
+    <Style Selector="TextBlock">
+      <Setter Property="Foreground" Value="{StaticResource fg}"/>
+      <Setter Property="Background" Value="{StaticResource bg}"/>
+    </Style>
+  </Window.Styles>
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+    
+    <Grid RowDefinitions="*, auto" ColumnDefinitions="*, auto">
+      <TextBlock FontFamily="Consolas" FontSize="14" Text="{Binding Data}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.ColumnSpan="2"/>
+      <TextBox Grid.Row="1" Grid.Column="0" x:Name="sln" Watermark="Type sln here"/>
+      <Button Content="Load Sln" Grid.Row="1" Grid.Column="1" Command="{Binding LoadSln}" CommandParameter="{Binding #sln.Text}" BorderThickness="1" Margin="3,0,0,0"/>
+    </Grid>
+</Window>
