@@ -8,7 +8,7 @@ using System.Text;
 using System.Reactive.Subjects;
 using System.Reactive.Linq;
 using System.Reactive.Concurrency;
-using Avalonia.Controls;
+using DynamicData;
 
 namespace CodeMonitor
 {
@@ -20,15 +20,18 @@ namespace CodeMonitor
             Sln = Path.GetFileName(slnPath);
         }
 
-        private readonly ReplaySubject<string> data = new ReplaySubject<string>();
-        public IObservable<string> Data => data;
+        private readonly SourceCache<InspectCodeFileProblems, string> results = new SourceCache<InspectCodeFileProblems, string>(x => x.File);
+        public IObservable<IChangeSet<InspectCodeFileProblems,string>> Problems => results.Connect();
+
+        private readonly ReplaySubject<string> status = new ReplaySubject<string>();
+        public IObservable<string> Status => status;
 
         private string Watch { get; }
         private string Sln { get; }
 
         private readonly object _mutex = new object();
         private readonly HashSet<string> _changed = new HashSet<string>();
-        private readonly Dictionary<string, List<(int line, string message)>> _problems = new Dictionary<string, List<(int line, string message)>>();
+        private readonly HashSet<string> _examined = new HashSet<string>();
 
         public void Handle(string s)
         {
@@ -72,66 +75,14 @@ namespace CodeMonitor
             return true;
         }
 
-        private string GetProblemsString()
+        private void ExamineFiles(ICollection<string> filePaths)
         {
-            var builder = new StringBuilder();
-
-            if (!_problems.Any())
-            {
-                builder.AppendLine();
-                builder.AppendLine("No problems!");
-            }
-
-            foreach (var problemSet in _problems)
-            {
-                if (problemSet.Value.Count > 1)
-                {
-                    builder.AppendLine($"{problemSet.Key}");
-                    foreach (var problem in problemSet.Value)
-                    {
-                        builder.AppendLine($"   {problem.line}: {problem.message}");
-                    }
-                }
-                else builder.AppendLine($"{problemSet.Key}:{problemSet.Value[0].line} {problemSet.Value[0].message}");
-            }
-            return builder.ToString();
-        }
-
-        private void UpdateProblems(string xml, List<string> examinedFiles)
-        {
-            examinedFiles.Select(_problems.Remove).ToArray();
-
-            var doc = XDocument.Parse(xml);
-
-            var data = doc.Root.Element("Issues")
-                               .Elements("Project")
-                               .Elements((XName)"Issue")
-                               .Select(x => (
-                                    Type: x.Attribute("TypeId").Value,
-                                    File: x.Attribute("File").Value,
-                                    Line: int.Parse(x.Attribute("Line")?.Value ?? "0"),
-                                    Message: x.Attribute("Message").Value
-                                ))
-                                .ToList();
-
-            data.Select(x => x.File).Distinct().ToList().ForEach(x => _problems[x] = new List<(int line, string message)>());
-
-            foreach (var problem in data)
-            {
-                _problems[problem.File].Add((problem.Line, problem.Message));
-            }
-        }
-
-        private string ExamineFiles(List<string> filePaths)
-        {
-            //return File.ReadAllText("resharper.out");
-
             var outFile = Path.GetFullPath("resharper.out");
 
             var psi = new ProcessStartInfo
             {
                 FileName = @"c:\bin\inspectcode.exe",
-                CreateNoWindow=true
+                CreateNoWindow = true
             };
 
             var args = new List<string>
@@ -143,7 +94,7 @@ namespace CodeMonitor
             };
 
             var tryProfile = Path.Combine(Watch, Sln + ".DotSettings");
-            if(File.Exists(tryProfile))
+            if (File.Exists(tryProfile))
             {
                 args.Add($"--profile={tryProfile}");
             }
@@ -155,7 +106,32 @@ namespace CodeMonitor
 
             var proc = Process.Start(psi);
             proc.WaitForExit();
-            return File.ReadAllText(outFile);
+            var xml = File.ReadAllText(outFile);
+
+            var doc = XDocument.Parse(xml);
+
+            var problems = doc.Root.Element("Issues")
+                                   .Elements("Project")
+                                   .Elements((XName)"Issue")
+                                   .Select(x =>
+                                   (
+                                       File: x.Attribute("File").Value,
+                                       Message: x.Attribute("Message").Value,
+                                       Line: int.Parse(x.Attribute("Line")?.Value ?? "0"),
+                                       Type: x.Attribute("TypeId").Value
+                                   ))
+                                   .GroupBy(x => x.File)
+                                   .ToDictionary(x => x.Key, x => x.Select(y => new InspectCodeProblem(y.Message, y.Line, y.Type)));
+
+            var kees = results.Keys.Except(problems.Keys).ToList();
+
+            results.RemoveKeys(kees);
+
+            foreach(var x in problems)
+            {
+                _examined.Add(x.Key);
+                results.AddOrUpdate(new InspectCodeFileProblems(x.Key, x.Value.ToList()));
+            }
         }
 
         IDisposable subscription;
@@ -181,41 +157,35 @@ namespace CodeMonitor
             w.Created += (o, e) => Handle(e.FullPath);
             w.Renamed += (o, e) => Handle(e.FullPath);
 
-            data.OnNext("Doing Initial Analysis");
+            status.OnNext("Doing Initial Analysis");
             subscription = Observable.Timer(TimeSpan.Zero, TimeSpan.FromSeconds(10))
                       .SubscribeOn(TaskPoolScheduler.Default)
                       .Subscribe(Loop);
         }
 
         private bool initial = true;
-        private string lastProblems = "";
 
         private void Loop(long _)
         {
             // initial
             if (initial)
             {
-                var result = ExamineFiles(new List<string>());
-                UpdateProblems(result, new List<string>());
-                lastProblems = GetProblemsString();
-                data.OnNext(lastProblems);
+                ExamineFiles(new List<string>());
                 initial = false;
                 return;
             }
             
             lock (_mutex)
             {
-                var gone = _problems.Keys
-                                   .Select(key => (key, full: Path.Combine(Watch, key)))
-                                   .Where(x => !File.Exists(x.full) && ShouldHandle(x.full))
-                                   .Select(x => x.key)
-                                   .ToList();
+                var gone = _examined.Select(key => (key, full: Path.Combine(Watch, key)))
+                                    .Where(x => !File.Exists(x.full) && ShouldHandle(x.full))
+                                    .Select(x => x.key)
+                                    .ToList();
 
                 if (gone.Any() || _changed.Any())
                 {
                     var changeNote = new StringBuilder();
 
-                    changeNote.Append(lastProblems);
                     changeNote.AppendLine();
                     changeNote.AppendLine("Changes detected!");
                     if (gone.Any())
@@ -230,16 +200,16 @@ namespace CodeMonitor
                     }
                     changeNote.AppendLine("Analyzing...");
 
-                    data.OnNext(changeNote.ToString());
+                    status.OnNext(changeNote.ToString());
 
-                    gone.Select(_problems.Remove).ToArray();
+                    foreach(var g in gone)
+                    {
+                        results.Remove(g);
+                    }
 
-                    var changedList = _changed.ToList();
+                    ExamineFiles(_changed);
 
-                    var result = ExamineFiles(changedList);
-                    UpdateProblems(result, changedList);
-                    lastProblems = GetProblemsString();
-                    data.OnNext(lastProblems);
+                    status.OnNext("Idle");
 
                     _changed.Clear();
                 }

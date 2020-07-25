@@ -3,9 +3,11 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using CodeMonitor.ViewModels;
 using CodeMonitor.Views;
+using PropertyChanged;
 
 namespace CodeMonitor
 {
+    [DoNotNotify]
     public class App : Application
     {
         public override void Initialize()

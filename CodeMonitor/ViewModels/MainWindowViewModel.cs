@@ -1,30 +1,52 @@
-﻿using System.Reactive;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.Dynamic;
+using System.IO;
+using System.Linq;
+using System.Reactive;
+using System.Reactive.Linq;
+using Avalonia.Controls;
+using DynamicData;
+using PropertyChanged;
 using ReactiveUI;
 
+#warning subscriptions need disposing
 namespace CodeMonitor.ViewModels
 {
+    [AddINotifyPropertyChangedInterface]
     public class MainWindowViewModel : ViewModelBase
     {
-        private ObservableAsPropertyHelper<string> data;
-        public string Data => data?.Value ?? "Awaiting input...";
+        public ReactiveCommand<Window,Unit> Add { get; }
 
-        public ReactiveCommand<string, Unit> LoadSln { get; }
+        public ReadOnlyObservableCollection<MonitoredDirectoryViewModel> Monitored => monitored;
+        private ReadOnlyObservableCollection<MonitoredDirectoryViewModel> monitored;
 
-        private InspectCodeLoop _inspectLoop;
+        private SourceCache<MonitoredDirectoryViewModel, string> monitoredSourceCache;
 
         public MainWindowViewModel()
         {
-            LoadSln = ReactiveCommand.CreateFromTask<string, Unit>(async slnPath =>
+            monitoredSourceCache = new SourceCache<MonitoredDirectoryViewModel, string>(x => x.Name);
+
+            monitoredSourceCache.Connect()
+                                .ObserveOn(RxApp.MainThreadScheduler)
+                                .Bind(out monitored)
+                                .Subscribe();
+
+            Add = ReactiveCommand.CreateFromTask<Window,Unit>(async w =>
             {
-                data?.Dispose();
-                _inspectLoop?.Stop();
+                var d = new OpenFolderDialog();
 
-                _inspectLoop = new InspectCodeLoop(slnPath);
-                _inspectLoop.Start();
+                var result = await d.ShowAsync(w);
 
-                data = _inspectLoop.Data.ToProperty(this, x => x.Data);
-                this.RaisePropertyChanged(nameof(Data));
+                if (Directory.Exists(result))
+                {
+                    if (monitoredSourceCache.Keys.Any(x => x.Equals(result)))
+                    {
+                        throw new Exception("Already got it");
+                    }
 
+                    monitoredSourceCache.AddOrUpdate(new MonitoredDirectoryViewModel(result));
+                }
                 return Unit.Default;
             });
         }
