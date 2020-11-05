@@ -1,12 +1,14 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:CodeMonitor.ViewModels;assembly=CodeMonitor"
         xmlns:l="clr-namespace:CodeMonitor.Views;assembly=CodeMonitor"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="350"
+        Width="700" Height="300"
+        mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="300"
         HasSystemDecorations="False"
         x:Name="mw"
+        Topmost="True"
         x:Class="CodeMonitor.Views.MainWindow"
         Title="CodeMonitor">
   <Window.Resources>
@@ -43,6 +45,21 @@
         </ControlTemplate>
       </Setter>
     </Style>
+    <Style Selector="TabItem">
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Padding" Value="6,2"/>
+      <Setter Property="Background" Value="Transparent"/>
+    </Style>
+    <Style Selector="TabItem:selected">
+      <Setter Property="Background" Value="{DynamicResource tone1}"/>
+    </Style>
+    <Style Selector="TabItem:pointerover">
+      <Setter Property="Background" Value="{DynamicResource tone2}"/>
+    </Style>
+    <Style Selector="TabItem:pressed">
+      <Setter Property="Background" Value="{DynamicResource bd}"/>
+    </Style>
+    
     <Style Selector="GridSplitter.f">
       <Setter Property="Template">
         <ControlTemplate>
@@ -71,7 +88,7 @@
   <Design.DataContext>
     <l:dvm/>
   </Design.DataContext>
-  <Grid RowDefinitions="auto,*,auto, auto" ColumnDefinitions="70, 0, *" x:Name="mg" Background="{StaticResource tone1}">
+  <Grid RowDefinitions="auto,*,auto, auto" ColumnDefinitions="90, 0, *" x:Name="mg" Background="{StaticResource tone1}">
     <Grid Grid.ColumnSpan="3" Height="24" x:Name="moveThumb" Background="Transparent">
       <TextBlock Background="Transparent" IsHitTestVisible="False" FontSize="12" Margin="6,0,0,0" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource bd}">CodeMonitor</TextBlock>
       <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right" Spacing="11" Margin="0,0,7,0">
@@ -109,7 +126,10 @@
       </ListBox.Styles>
       <ListBox.ItemTemplate>
         <DataTemplate>
-          <TextBlock Text="{Binding Name}" HorizontalAlignment="Stretch" TextAlignment="Right"/>
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <Ellipse Width="7" Height="7" Fill="Green" VerticalAlignment="Center" Margin="0,2,5,0" IsVisible="{Binding Updating}"/>
+            <TextBlock Text="{Binding Name}" HorizontalAlignment="Stretch"/>
+          </StackPanel>
         </DataTemplate>
       </ListBox.ItemTemplate>
     </ListBox>
@@ -120,7 +140,9 @@
       </StackPanel>
     </Button>
     <Border Background="{StaticResource tone3}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="2" Grid.Row="1" CornerRadius="7,0,0,0">
-      <ItemsControl Items="{Binding ProblemGroups}" DataContext="{Binding #monitorList.SelectedItem}">
+      <TabControl DataContext="{Binding #monitorList.SelectedItem}" Margin="0,0,0,11">
+        <TabItem Header="InspectCode.exe">
+      <ItemsControl Items="{Binding ProblemGroups}">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
             <StackPanel>
@@ -149,8 +171,41 @@
           </DataTemplate>
         </ItemsControl.ItemTemplate>
       </ItemsControl>
+          </TabItem>
+          <TabItem Header="CleanupCode.exe">
+            <Grid ColumnDefinitions="*,50">
+              
+            <ListBox Items="{Binding FilesToClean}" Background="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Padding="0" Margin="0" BorderThickness="0">
+              <ListBox.Styles>
+        <Style Selector="ListBoxItem">
+          <Setter Property="Template">
+            <ControlTemplate TargetType="ListBoxItem">
+              <Border Background="{TemplateBinding Background}" Margin="0,5,0,0" Padding="0,0,5,0">
+                <ContentPresenter Background="Transparent" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"/>
+              </Border>
+            </ControlTemplate>
+          </Setter>
+        </Style>
+        
+      </ListBox.Styles>
+              <ListBox.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding Path}"/>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+              <StackPanel Orientation="Vertical" Grid.Column="1" Spacing="5" Margin="3,0" VerticalAlignment="Bottom">
+                <Button Background="{StaticResource tone2}" Command="{Binding CleanFiles}">Clean</Button>
+                <Button Background="{StaticResource tone2}" Command="{Binding ResetCleanFiles}">Reset</Button>
+              </StackPanel>
+            </Grid>
+          </TabItem>
+      </TabControl>
     </Border>
     <GridSplitter Classes="f" Grid.Column="1" Grid.Row="1" Width="3" Background="Transparent" VerticalAlignment="Stretch" Margin="0,0,-3,0"/>
-    <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" x:Name="sizeThumb" Width="16" Height="16" Grid.Row="1" Grid.Column="2" Background="{StaticResource bd}" Cursor="BottomRightCorner"/>
+    <Border HorizontalAlignment="Stretch" Background="{StaticResource tone2}" VerticalAlignment="Bottom" Height="17" Grid.Row="1" Grid.Column="2" BorderThickness="0,1,0,0" BorderBrush="{StaticResource bd}">
+      <TextBlock HorizontalAlignment="Right" Text="{Binding #monitorList.SelectedItem.Status}" Margin="0,0,19,1"/>
+    </Border>
+    <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" x:Name="sizeThumb" Width="16" Height="16" Grid.Row="1" Grid.Column="2" Background="{StaticResource tone3}" Cursor="BottomRightCorner"/>
   </Grid>
 </Window>

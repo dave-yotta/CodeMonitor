@@ -23,7 +23,12 @@ namespace CodeMonitor.Views
             ("file5", "msg",1,"tp1"),
             ("file5", "msg",1,"tp1"),
             ("file5", "msg",1,"tp1")
-        }.Select(x => new { File = x.Item1, Message = x.Item2, Line = x.Item3, Type = x.Item4 }).ToList();
+        }.Select(x => new { File = x.Item1, Message = x.Item2, Line = x.Item3, Type = x.Item4 })
+         .ToLookup(x => x.File)
+         .Select(x => new { Group = x.Key, Problems = x.Select(x => new { x.Message, x.Line, x.Type }) }).ToList();
+        public object FilesToClean => Enumerable.Range(0,100).Select(x=>new { Path = "file-number-" + x }).ToArray();
+        public ReactiveCommand<Unit,Unit> CleanFiles => ReactiveCommand.Create(delegate{ });
+        public ReactiveCommand<Unit,Unit> ResetCleanFiles => ReactiveCommand.Create(delegate{ });
     }
 
     public class dvm
@@ -67,7 +72,7 @@ namespace CodeMonitor.Views
 
             var mt = this.FindControl<Control>("moveThumb");
 
-             Point? _lastPoint = null;
+            Point? _lastPoint = null;
             var originScren = PixelPoint.Origin;
             var windowStart = PixelPoint.Origin;
 

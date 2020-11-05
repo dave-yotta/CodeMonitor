@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Dynamic;
 using System.IO;
@@ -12,19 +13,15 @@ namespace CodeMonitor.ViewModels
 {
 #warning subscriptions need disposing
 
-    public class ProblemGroupViewModel :ViewModelBase
+    public class ProblemGroupViewModel : ViewModelBase
     {
-        public ProblemGroupViewModel(IGroup<ProblemViewModel, string, string> x)
+        public ProblemGroupViewModel(InspectCodeFileProblems model)
         {
-            Group = x.Key;
-            x.Cache.Connect()
-                   .ObserveOn(RxApp.MainThreadScheduler)
-                   .Bind(out problems)
-                   .Subscribe();
+            Group = model.File;
+            Problems = model.Problems.Select(y => new ProblemViewModel(model.File, y.Message, y.Line, y.Type)).ToList();
         }
 
         public string Group { get; }
-        public ReadOnlyObservableCollection<ProblemViewModel> Problems => problems;
-        private readonly ReadOnlyObservableCollection<ProblemViewModel> problems;
+        public List<ProblemViewModel> Problems { get; }
     }
 }

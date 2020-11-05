@@ -21,7 +21,10 @@ namespace CodeMonitor
         }
 
         private readonly SourceCache<InspectCodeFileProblems, string> results = new SourceCache<InspectCodeFileProblems, string>(x => x.File);
-        public IObservable<IChangeSet<InspectCodeFileProblems,string>> Problems => results.Connect();
+        public IObservableCache<InspectCodeFileProblems, string> Problems => results;
+
+        private readonly ReplaySubject<bool> active = new ReplaySubject<bool>(1);
+        public IObservable<bool> Active => active;
 
         private readonly ReplaySubject<string> status = new ReplaySubject<string>();
         public IObservable<string> Status => status;
@@ -65,7 +68,7 @@ namespace CodeMonitor
                 FileName = "git",
                 Arguments = "check-ignore " + gitPath,
                 RedirectStandardOutput = true,
-                CreateNoWindow=true
+                CreateNoWindow = true
             });
             var result = proc.StandardOutput.ReadToEnd();
             proc.WaitForExit();
@@ -82,7 +85,8 @@ namespace CodeMonitor
             var psi = new ProcessStartInfo
             {
                 FileName = @"c:\bin\inspectcode.exe",
-                CreateNoWindow = true
+                CreateNoWindow = true,
+                RedirectStandardOutput = true
             };
 
             var args = new List<string>
@@ -99,12 +103,19 @@ namespace CodeMonitor
                 args.Add($"--profile={tryProfile}");
             }
 
-            args.AddRange(filePaths.Select(x => $"--input={x}"));
+            //TODO: Use a config file
+            if(filePaths.Count < 100)
+            {
+                args.AddRange(filePaths.Select(x => $"--input={x}"));
+            }
+
             args.Add($"{Path.Combine(Watch, Sln)}");
 
             args.ForEach(psi.ArgumentList.Add);
 
             var proc = Process.Start(psi);
+            proc.OutputDataReceived += (o,e) => status.OnNext(e.Data);
+            proc.BeginOutputReadLine();
             proc.WaitForExit();
             var xml = File.ReadAllText(outFile);
 
@@ -127,7 +138,7 @@ namespace CodeMonitor
 
             results.RemoveKeys(kees);
 
-            foreach(var x in problems)
+            foreach (var x in problems)
             {
                 _examined.Add(x.Key);
                 results.AddOrUpdate(new InspectCodeFileProblems(x.Key, x.Value.ToList()));
@@ -139,13 +150,14 @@ namespace CodeMonitor
         internal void Stop()
         {
             subscription.Dispose();
+            w.Dispose();
         }
 
         public void Start()
         {
             // watch
 
-            var w = new FileSystemWatcher(Watch)
+            w = new FileSystemWatcher(Watch)
             {
                 IncludeSubdirectories = true,
                 EnableRaisingEvents = true,
@@ -164,17 +176,20 @@ namespace CodeMonitor
         }
 
         private bool initial = true;
+        private FileSystemWatcher w;
 
         private void Loop(long _)
         {
             // initial
             if (initial)
             {
+                active.OnNext(true);
                 ExamineFiles(new List<string>());
                 initial = false;
+                active.OnNext(false);
                 return;
             }
-            
+
             lock (_mutex)
             {
                 var gone = _examined.Select(key => (key, full: Path.Combine(Watch, key)))
@@ -200,18 +215,25 @@ namespace CodeMonitor
                     }
                     changeNote.AppendLine("Analyzing...");
 
-                    status.OnNext(changeNote.ToString());
 
-                    foreach(var g in gone)
+                    foreach (var g in gone)
                     {
                         results.Remove(g);
                     }
 
-                    ExamineFiles(_changed);
+                    active.OnNext(true);
+                    status.OnNext(changeNote.ToString());
+                    try
+                    {
+                        ExamineFiles(_changed);
+                        _changed.Clear();
+                    }
+                    finally
+                    {
 
-                    status.OnNext("Idle");
-
-                    _changed.Clear();
+                        status.OnNext("Idle");
+                        active.OnNext(false);
+                    }
                 }
             }
         }
