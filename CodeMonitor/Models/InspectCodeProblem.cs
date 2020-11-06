@@ -1,4 +1,4 @@
-﻿namespace CodeMonitor
+﻿namespace CodeMonitor.Models
 {
     public class InspectCodeProblem
     {

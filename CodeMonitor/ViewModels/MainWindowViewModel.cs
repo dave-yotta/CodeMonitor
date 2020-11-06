@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using Avalonia.Controls;
+using CodeMonitor.Models;
 using DynamicData;
 using PropertyChanged;
 using ReactiveUI;
 
-#warning subscriptions need disposing
 namespace CodeMonitor.ViewModels
 {
     [AddINotifyPropertyChangedInterface]
@@ -19,9 +18,11 @@ namespace CodeMonitor.ViewModels
         public ReactiveCommand<Window,Unit> Add { get; }
 
         public ReadOnlyObservableCollection<MonitoredDirectoryViewModel> Monitored => monitored;
-        private ReadOnlyObservableCollection<MonitoredDirectoryViewModel> monitored;
+        private readonly ReadOnlyObservableCollection<MonitoredDirectoryViewModel> monitored;
 
-        private SourceCache<MonitoredDirectoryViewModel, string> monitoredSourceCache;
+        private readonly SourceCache<MonitoredDirectoryViewModel, string> monitoredSourceCache;
+
+        public ReactiveCommand<Window, Unit> SetResharperCliPath {get; }
 
         public MainWindowViewModel()
         {
@@ -30,13 +31,14 @@ namespace CodeMonitor.ViewModels
             monitoredSourceCache.Connect()
                                 .ObserveOn(RxApp.MainThreadScheduler)
                                 .Bind(out monitored)
+                                .DisposeMany()
                                 .Subscribe();
 
-            Add = ReactiveCommand.CreateFromTask<Window,Unit>(async w =>
+            Add = ReactiveCommand.CreateFromTask<Window>(async w =>
             {
                 var d = new OpenFolderDialog();
 
-                var result = await d.ShowAsync(w);
+                var result = await d.ShowAsync(w).ConfigureAwait(false);
 
                 if (Directory.Exists(result))
                 {
@@ -47,7 +49,13 @@ namespace CodeMonitor.ViewModels
 
                     monitoredSourceCache.AddOrUpdate(new MonitoredDirectoryViewModel(result));
                 }
-                return Unit.Default;
+            });
+
+            SetResharperCliPath = ReactiveCommand.Create<Window>(async w =>
+            {
+                var d = new OpenFolderDialog ();
+
+                Settings.RsCltPath = await d.ShowAsync(w).ConfigureAwait(false);
             });
         }
     }

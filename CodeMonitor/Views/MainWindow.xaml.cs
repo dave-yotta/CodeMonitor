@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Reactive;
 using System.Windows.Input;
 using Avalonia;
@@ -10,7 +9,7 @@ using ReactiveUI;
 
 namespace CodeMonitor.Views
 {
-    public class dmd
+    public class TestData
     {
         public string Name => "Test dir";
         public string Status => "Testing";
@@ -31,11 +30,11 @@ namespace CodeMonitor.Views
         public ReactiveCommand<Unit,Unit> ResetCleanFiles => ReactiveCommand.Create(delegate{ });
     }
 
-    public class dvm
+    public class TestMainVM
     {
-        public object Monitored => new dmd[]
+        public object Monitored => new TestData[]
         {
-            new dmd()
+            new TestData()
         };
     }
 

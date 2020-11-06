@@ -4,8 +4,9 @@
         xmlns:l="clr-namespace:CodeMonitor.Views;assembly=CodeMonitor"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        Width="700" Height="300"
-        mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="300"
+        xmlns:s="clr-namespace:System;assembly=mscorlib"
+        Width="900" Height="300"
+        mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="300"
         HasSystemDecorations="False"
         x:Name="mw"
         Topmost="True"
@@ -47,14 +48,14 @@
     </Style>
     <Style Selector="TabItem">
       <Setter Property="FontSize" Value="12"/>
-      <Setter Property="Padding" Value="6,2"/>
+      <Setter Property="Padding" Value="6,4"/>
       <Setter Property="Background" Value="Transparent"/>
     </Style>
     <Style Selector="TabItem:selected">
-      <Setter Property="Background" Value="{DynamicResource tone1}"/>
+      <Setter Property="Background" Value="{DynamicResource tone2}"/>
     </Style>
     <Style Selector="TabItem:pointerover">
-      <Setter Property="Background" Value="{DynamicResource tone2}"/>
+      <Setter Property="Background" Value="{DynamicResource tone1}"/>
     </Style>
     <Style Selector="TabItem:pressed">
       <Setter Property="Background" Value="{DynamicResource bd}"/>
@@ -86,7 +87,7 @@
     </Style>
   </Window.Styles>
   <Design.DataContext>
-    <l:dvm/>
+    <l:TestMainVM/>
   </Design.DataContext>
   <Grid RowDefinitions="auto,*,auto, auto" ColumnDefinitions="90, 0, *" x:Name="mg" Background="{StaticResource tone1}">
     <Grid Grid.ColumnSpan="3" Height="24" x:Name="moveThumb" Background="Transparent">
@@ -133,14 +134,14 @@
         </DataTemplate>
       </ListBox.ItemTemplate>
     </ListBox>
-    <Button Classes="ib" Grid.Row="1" VerticalAlignment="Bottom" HorizontalAlignment="Right" Command="{Binding Add}" CommandParameter="{Binding #mw}" Margin="0,0,3,5">
+    <Button Classes="ib" Grid.Row="1" VerticalAlignment="Bottom" HorizontalAlignment="Right" Command="{Binding Add}" CommandParameter="{Binding #mw}" Margin="0,0,3,5" Cursor="Hand">
       <StackPanel Orientation="Horizontal">
         <TextBlock Foreground="{StaticResource bd}" Margin="0,-2,3,0" VerticalAlignment="Center">monitor</TextBlock>
         <Image Source="/Assets/addIcon.png" Height="16" Width="16" VerticalAlignment="Center"/>
       </StackPanel>
     </Button>
     <Border Background="{StaticResource tone3}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="2" Grid.Row="1" CornerRadius="7,0,0,0">
-      <TabControl DataContext="{Binding #monitorList.SelectedItem}" Margin="0,0,0,11">
+      <TabControl DataContext="{Binding #monitorList.SelectedItem}" Margin="0,0,0,12">
         <TabItem Header="InspectCode.exe">
       <ItemsControl Items="{Binding ProblemGroups}">
         <ItemsControl.ItemTemplate>
@@ -173,7 +174,7 @@
       </ItemsControl>
           </TabItem>
           <TabItem Header="CleanupCode.exe">
-            <Grid ColumnDefinitions="*,50">
+            <Grid>
               
             <ListBox Items="{Binding FilesToClean}" Background="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Padding="0" Margin="0" BorderThickness="0">
               <ListBox.Styles>
@@ -194,7 +195,7 @@
                 </DataTemplate>
               </ListBox.ItemTemplate>
             </ListBox>
-              <StackPanel Orientation="Vertical" Grid.Column="1" Spacing="5" Margin="3,0" VerticalAlignment="Bottom">
+              <StackPanel Orientation="Vertical" Grid.Column="1" Spacing="5" Margin="3,0,23,7" VerticalAlignment="Bottom" HorizontalAlignment="Right">
                 <Button Background="{StaticResource tone2}" Command="{Binding CleanFiles}">Clean</Button>
                 <Button Background="{StaticResource tone2}" Command="{Binding ResetCleanFiles}">Reset</Button>
               </StackPanel>
@@ -203,9 +204,33 @@
       </TabControl>
     </Border>
     <GridSplitter Classes="f" Grid.Column="1" Grid.Row="1" Width="3" Background="Transparent" VerticalAlignment="Stretch" Margin="0,0,-3,0"/>
-    <Border HorizontalAlignment="Stretch" Background="{StaticResource tone2}" VerticalAlignment="Bottom" Height="17" Grid.Row="1" Grid.Column="2" BorderThickness="0,1,0,0" BorderBrush="{StaticResource bd}">
-      <TextBlock HorizontalAlignment="Right" Text="{Binding #monitorList.SelectedItem.Status}" Margin="0,0,19,1"/>
+    <Border HorizontalAlignment="Stretch" Background="{StaticResource tone2}" VerticalAlignment="Bottom" Height="25" Grid.Row="1" Grid.Column="2" >
+      <TextBlock HorizontalAlignment="Right" Text="{Binding #monitorList.SelectedItem.Status}" Margin="0,0,24,0" VerticalAlignment="Center"/>
     </Border>
-    <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" x:Name="sizeThumb" Width="16" Height="16" Grid.Row="1" Grid.Column="2" Background="{StaticResource tone3}" Cursor="BottomRightCorner"/>
+    <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" x:Name="sizeThumb" Width="24" Height="24" Grid.Row="1" Grid.Column="2" Cursor="BottomRightCorner">
+      <Polygon Fill="{StaticResource tone3}" Points="12,24 24,24 24,12 12,24"/>
+    </Border>
+    <Button Classes="ib" HorizontalAlignment="Right" VerticalAlignment="Top"  Grid.Row="1" Grid.Column="2" Cursor="Hand" Command="{Binding SetResharperCliPath}" CommandParameter="{Binding #mw}">
+      <StackPanel Orientation="Horizontal">
+        <TextBlock Foreground="{StaticResource bd}" VerticalAlignment="Center">resharper cli path</TextBlock>
+      <Canvas Margin="0,3,0,0" Width="24" Height="17">
+        <Canvas.Resources>
+          <s:Double x:Key="wid">2</s:Double>
+          <s:Double x:Key="hig">16</s:Double>
+          <s:Double x:Key="ofs">12</s:Double>
+        </Canvas.Resources>
+        <Rectangle Canvas.Left="{StaticResource ofs}" Fill="{StaticResource bd}" Width="{StaticResource wid}" Height="{StaticResource hig}"> <Rectangle.RenderTransform> <RotateTransform Angle="00"/> </Rectangle.RenderTransform> </Rectangle>
+        <Rectangle Canvas.Left="{StaticResource ofs}" Fill="{StaticResource bd}" Width="{StaticResource wid}" Height="{StaticResource hig}"> <Rectangle.RenderTransform> <RotateTransform Angle="45"/> </Rectangle.RenderTransform> </Rectangle>
+        <Rectangle Canvas.Left="{StaticResource ofs}" Fill="{StaticResource bd}" Width="{StaticResource wid}" Height="{StaticResource hig}"> <Rectangle.RenderTransform> <RotateTransform Angle="90"/> </Rectangle.RenderTransform> </Rectangle>
+        <Rectangle Canvas.Left="{StaticResource ofs}" Fill="{StaticResource bd}" Width="{StaticResource wid}" Height="{StaticResource hig}"> <Rectangle.RenderTransform> <RotateTransform Angle="135"/> </Rectangle.RenderTransform> </Rectangle>
+        <Rectangle Canvas.Left="{StaticResource ofs}" Fill="{StaticResource bd}" Width="{StaticResource wid}" Height="{StaticResource hig}"> <Rectangle.RenderTransform> <RotateTransform Angle="180"/> </Rectangle.RenderTransform> </Rectangle>
+        <Rectangle Canvas.Left="{StaticResource ofs}" Fill="{StaticResource bd}" Width="{StaticResource wid}" Height="{StaticResource hig}"> <Rectangle.RenderTransform> <RotateTransform Angle="225"/> </Rectangle.RenderTransform> </Rectangle>
+        <Rectangle Canvas.Left="{StaticResource ofs}" Fill="{StaticResource bd}" Width="{StaticResource wid}" Height="{StaticResource hig}"> <Rectangle.RenderTransform> <RotateTransform Angle="270"/> </Rectangle.RenderTransform> </Rectangle>
+        <Rectangle Canvas.Left="{StaticResource ofs}" Fill="{StaticResource bd}" Width="{StaticResource wid}" Height="{StaticResource hig}"> <Rectangle.RenderTransform> <RotateTransform Angle="315"/> </Rectangle.RenderTransform> </Rectangle>
+        <Ellipse Fill="{StaticResource bd}" Width="10" Height="10" Canvas.Top="3" Canvas.Left="8"/>
+        <Ellipse Fill="{StaticResource tone3}" Width="6" Height="6" Canvas.Top="5" Canvas.Left="10"/>
+      </Canvas>
+        </StackPanel>
+    </Button>
   </Grid>
 </Window>

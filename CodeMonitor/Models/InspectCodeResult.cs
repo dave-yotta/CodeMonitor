@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace CodeMonitor
+namespace CodeMonitor.Models
 {
     public class InspectCodeFileProblems
     {

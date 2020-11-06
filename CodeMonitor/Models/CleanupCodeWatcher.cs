@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Linq;
-using System.Xml.Linq;
 using System.Collections.Generic;
 using System.IO;
 using System.Diagnostics;
 using System.Text;
 using System.Reactive.Subjects;
 using System.Reactive.Linq;
-using System.Reactive.Concurrency;
 using DynamicData;
 
-namespace CodeMonitor
+namespace CodeMonitor.Models
 {
     public class CleanupCodeWatcher
     {
@@ -57,7 +55,10 @@ namespace CodeMonitor
                 s.EndsWith("~") ||
                 s.EndsWith(".csproj") ||
                 s.EndsWith(".TMP")
-            ) return false;
+            )
+            {
+                return false;
+            }
 
             if (Directory.Exists(s))
             {
@@ -76,9 +77,7 @@ namespace CodeMonitor
             var result = proc.StandardOutput.ReadToEnd();
             proc.WaitForExit();
 
-            if (result != "") return false;
-
-            return true;
+            return result?.Length == 0;
         }
 
         public void ResetChanged()
@@ -112,7 +111,7 @@ namespace CodeMonitor
         {
             var psi = new ProcessStartInfo
             {
-                FileName = @"c:\bin\cleanupcode.exe",
+                FileName = $@"{Settings.RsCltPath}\cleanupcode.exe",
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -150,7 +149,7 @@ namespace CodeMonitor
                 throw new Exception("CleanupCode was sad");
             }
 
-            lock(_mutex)
+            lock (_mutex)
             {
                 _changed.Clear();
                 results.Clear();
@@ -182,6 +181,5 @@ namespace CodeMonitor
 
             ResetChanged();
         }
-
     }
 }

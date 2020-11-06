@@ -2,7 +2,6 @@
 
 namespace CodeMonitor.ViewModels
 {
-
     public class ProblemViewModel : ViewModelBase
     {
         public ProblemViewModel(string file, string message, int line, string type)

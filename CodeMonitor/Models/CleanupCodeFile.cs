@@ -1,4 +1,4 @@
-﻿namespace CodeMonitor
+﻿namespace CodeMonitor.Models
 {
     public class CleanupCodeFile
     {
@@ -7,6 +7,6 @@
             Path = path;
         }
 
-        public string Path {get;}
+        public string Path { get; }
     }
 }

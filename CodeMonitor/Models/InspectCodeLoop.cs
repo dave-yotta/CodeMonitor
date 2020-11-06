@@ -10,7 +10,7 @@ using System.Reactive.Linq;
 using System.Reactive.Concurrency;
 using DynamicData;
 
-namespace CodeMonitor
+namespace CodeMonitor.Models
 {
     public class InspectCodeLoop
     {
@@ -54,7 +54,10 @@ namespace CodeMonitor
                 s.EndsWith("~") ||
                 s.EndsWith(".csproj") ||
                 s.EndsWith(".TMP")
-            ) return false;
+            )
+            {
+                return false;
+            }
 
             if (Directory.Exists(s))
             {
@@ -73,9 +76,7 @@ namespace CodeMonitor
             var result = proc.StandardOutput.ReadToEnd();
             proc.WaitForExit();
 
-            if (result != "") return false;
-
-            return true;
+            return result?.Length == 0;
         }
 
         private void ExamineFiles(ICollection<string> filePaths)
@@ -84,7 +85,7 @@ namespace CodeMonitor
 
             var psi = new ProcessStartInfo
             {
-                FileName = @"c:\bin\inspectcode.exe",
+                FileName = $@"{Settings.RsCltPath}\inspectcode.exe",
                 CreateNoWindow = true,
                 RedirectStandardOutput = true
             };
@@ -104,7 +105,7 @@ namespace CodeMonitor
             }
 
             //TODO: Use a config file
-            if(filePaths.Count < 100)
+            if (filePaths.Count < 100)
             {
                 args.AddRange(filePaths.Select(x => $"--input={x}"));
             }
@@ -114,7 +115,7 @@ namespace CodeMonitor
             args.ForEach(psi.ArgumentList.Add);
 
             var proc = Process.Start(psi);
-            proc.OutputDataReceived += (o,e) => status.OnNext(e.Data);
+            proc.OutputDataReceived += (o, e) => status.OnNext(e.Data);
             proc.BeginOutputReadLine();
             proc.WaitForExit();
             var xml = File.ReadAllText(outFile);
@@ -123,7 +124,7 @@ namespace CodeMonitor
 
             var problems = doc.Root.Element("Issues")
                                    .Elements("Project")
-                                   .Elements((XName)"Issue")
+                                   .Elements("Issue")
                                    .Select(x =>
                                    (
                                        File: x.Attribute("File").Value,
@@ -145,7 +146,7 @@ namespace CodeMonitor
             }
         }
 
-        IDisposable subscription;
+        private IDisposable subscription;
 
         internal void Stop()
         {
@@ -197,24 +198,23 @@ namespace CodeMonitor
                                     .Select(x => x.key)
                                     .ToList();
 
-                if (gone.Any() || _changed.Any())
+                if (gone.Count > 0 || _changed.Count > 0)
                 {
                     var changeNote = new StringBuilder();
 
                     changeNote.AppendLine();
                     changeNote.AppendLine("Changes detected!");
-                    if (gone.Any())
+                    if (gone.Count > 0)
                     {
                         changeNote.AppendLine("Gone: ");
                         changeNote.AppendLine(string.Join(Environment.NewLine, gone));
                     }
-                    if (_changed.Any())
+                    if (_changed.Count > 0)
                     {
                         changeNote.AppendLine("Changed: ");
                         changeNote.AppendLine(string.Join(Environment.NewLine, _changed));
                     }
                     changeNote.AppendLine("Analyzing...");
-
 
                     foreach (var g in gone)
                     {
@@ -230,7 +230,6 @@ namespace CodeMonitor
                     }
                     finally
                     {
-
                         status.OnNext("Idle");
                         active.OnNext(false);
                     }
