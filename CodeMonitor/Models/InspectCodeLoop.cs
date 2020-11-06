@@ -162,7 +162,7 @@ namespace CodeMonitor.Models
             {
                 IncludeSubdirectories = true,
                 EnableRaisingEvents = true,
-                NotifyFilter = NotifyFilters.Attributes | NotifyFilters.CreationTime | NotifyFilters.DirectoryName | NotifyFilters.FileName | NotifyFilters.LastAccess | NotifyFilters.LastWrite | NotifyFilters.Security | NotifyFilters.Size,
+                NotifyFilter = NotifyFilters.DirectoryName | NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.Size,
                 Filter = "*.*"
             };
 
@@ -200,21 +200,21 @@ namespace CodeMonitor.Models
 
                 if (gone.Count > 0 || _changed.Count > 0)
                 {
-                    var changeNote = new StringBuilder();
-
-                    changeNote.AppendLine();
-                    changeNote.AppendLine("Changes detected!");
+                    status.OnNext("Changes detected!");
                     if (gone.Count > 0)
                     {
-                        changeNote.AppendLine("Gone: ");
-                        changeNote.AppendLine(string.Join(Environment.NewLine, gone));
+                        foreach(var g in gone)
+                        {
+                            status.OnNext("Gone: " +g);
+                        }
                     }
                     if (_changed.Count > 0)
                     {
-                        changeNote.AppendLine("Changed: ");
-                        changeNote.AppendLine(string.Join(Environment.NewLine, _changed));
+                        foreach(var c in _changed)
+                        {
+                            status.OnNext("Changed: " +c);
+                        }
                     }
-                    changeNote.AppendLine("Analyzing...");
 
                     foreach (var g in gone)
                     {
@@ -222,7 +222,7 @@ namespace CodeMonitor.Models
                     }
 
                     active.OnNext(true);
-                    status.OnNext(changeNote.ToString());
+                    status.OnNext("Analyzing...");
                     try
                     {
                         ExamineFiles(_changed);

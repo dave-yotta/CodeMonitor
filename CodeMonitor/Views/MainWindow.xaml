@@ -15,6 +15,7 @@
   <Window.Resources>
     <SolidColorBrush Color="White" x:Key="fg"/>
     <SolidColorBrush Color="#73767D" x:Key="bd"/>
+    <SolidColorBrush Color="#43464D" x:Key="bd2"/>
     <SolidColorBrush Color="#202225" x:Key="tone1"/>
     <SolidColorBrush Color="#2F3136" x:Key="tone2"/>
     <SolidColorBrush Color="#37393F" x:Key="tone3"/>
@@ -207,8 +208,8 @@
     <Border HorizontalAlignment="Stretch" Background="{StaticResource tone2}" VerticalAlignment="Bottom" Height="25" Grid.Row="1" Grid.Column="2" >
       <TextBlock HorizontalAlignment="Right" Text="{Binding #monitorList.SelectedItem.Status}" Margin="0,0,24,0" VerticalAlignment="Center"/>
     </Border>
-    <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" x:Name="sizeThumb" Width="24" Height="24" Grid.Row="1" Grid.Column="2" Cursor="BottomRightCorner">
-      <Polygon Fill="{StaticResource tone3}" Points="12,24 24,24 24,12 12,24"/>
+    <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" x:Name="sizeThumb" Width="24" Height="24" Grid.Row="1" Grid.Column="2" Cursor="BottomRightCorner" Margin="0,0,1,1">
+      <Polygon Fill="{StaticResource bd2}" Points="12,24 24,24 24,12 12,24"/>
     </Border>
     <Button Classes="ib" HorizontalAlignment="Right" VerticalAlignment="Top"  Grid.Row="1" Grid.Column="2" Cursor="Hand" Command="{Binding SetResharperCliPath}" CommandParameter="{Binding #mw}">
       <StackPanel Orientation="Horizontal">

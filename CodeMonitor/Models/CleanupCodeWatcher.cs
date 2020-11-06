@@ -171,7 +171,7 @@ namespace CodeMonitor.Models
             {
                 IncludeSubdirectories = true,
                 EnableRaisingEvents = true,
-                NotifyFilter = NotifyFilters.Attributes | NotifyFilters.CreationTime | NotifyFilters.DirectoryName | NotifyFilters.FileName | NotifyFilters.LastAccess | NotifyFilters.LastWrite | NotifyFilters.Security | NotifyFilters.Size,
+                NotifyFilter = NotifyFilters.DirectoryName | NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.Size,
                 Filter = "*.*"
             };
 
