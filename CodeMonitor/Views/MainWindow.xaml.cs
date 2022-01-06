@@ -68,66 +68,15 @@ namespace CodeMonitor.Views
 
             var mt = this.FindControl<Control>("moveThumb");
 
-            Point? _lastPoint = null;
-            var originScren = PixelPoint.Origin;
-            var windowStart = PixelPoint.Origin;
-
-            mt.PointerMoved += (o, e) =>
-              {
-                  if (_lastPoint.HasValue)
-                  {
-                      var delta = e.GetPosition(this) - _lastPoint.Value;
-                      var vectorScreen = this.PointToScreen(new Point(delta.X, delta.Y));
-                      Position = new PixelPoint(windowStart.X + vectorScreen.X - originScren.X, windowStart.Y + vectorScreen.Y - originScren.Y);
-                  }
-              };
             mt.PointerPressed += (o, e) =>
             {
-                originScren = this.PointToScreen(new Point(0, 0));
-                windowStart = Position;
-                e.Pointer.Capture((Control)e.Source);
-                e.Handled = true;
-                _lastPoint = e.GetPosition(this);
-            };
-
-            mt.PointerReleased += (o, e) =>
-            {
-                if (_lastPoint.HasValue)
-                {
-                    e.Pointer.Capture(null);
-                    e.Handled = true;
-                    _lastPoint = null;
-                }
+                BeginMoveDrag(e);
             };
 
             var st = this.FindControl<Control>("sizeThumb");
-
-            var sizeStart = Size.Empty;
-            st.PointerMoved += (o, e) =>
-              {
-                  if (_lastPoint.HasValue)
-                  {
-                      var delta = e.GetPosition(this) - _lastPoint.Value;
-
-                      ClientSize = sizeStart + new Size(delta.X, delta.Y);
-                  }
-              };
             st.PointerPressed += (o, e) =>
             {
-                sizeStart = ClientSize;
-                e.Pointer.Capture((Control)e.Source);
-                e.Handled = true;
-                _lastPoint = e.GetPosition(this);
-            };
-
-            st.PointerReleased += (o, e) =>
-            {
-                if (_lastPoint.HasValue)
-                {
-                    e.Pointer.Capture(null);
-                    e.Handled = true;
-                    _lastPoint = null;
-                }
+                BeginResizeDrag(WindowEdge.SouthEast, e);
             };
         }
     }
