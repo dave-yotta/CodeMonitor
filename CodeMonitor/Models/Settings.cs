@@ -2,6 +2,6 @@
 {
     public static class Settings
     {
-        public static string RsCltPath = "c:\\bin";
+        public static string RsCltPath = @"C:\Users\dave-yotta\r#clt";
     }
 }

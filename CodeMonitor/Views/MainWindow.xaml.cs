@@ -42,13 +42,13 @@ namespace CodeMonitor.Views
     public class MainWindow : Window
     {
         public static readonly AvaloniaProperty<GridLength> C1WidthProperty = AvaloniaProperty.Register<MainWindow, GridLength>("C1Width", new GridLength(1, GridUnitType.Star));
-        public GridLength C1Width { get => GetValue(C1WidthProperty); set => SetValue(C1WidthProperty, value); }
+        public GridLength C1Width { get => (GridLength)GetValue(C1WidthProperty); set => SetValue(C1WidthProperty, value); }
 
         public static readonly AvaloniaProperty<GridLength> C2WidthProperty = AvaloniaProperty.Register<MainWindow, GridLength>("C2Width", new GridLength(1, GridUnitType.Star));
-        public GridLength C2Width { get => GetValue(C2WidthProperty); set => SetValue(C2WidthProperty, value); }
+        public GridLength C2Width { get => (GridLength)GetValue(C2WidthProperty); set => SetValue(C2WidthProperty, value); }
 
         public static readonly AvaloniaProperty<GridLength> C3WidthProperty = AvaloniaProperty.Register<MainWindow, GridLength>("C3Width", new GridLength(10, GridUnitType.Star));
-        public GridLength C3Width { get => GetValue(C3WidthProperty); set => SetValue(C3WidthProperty, value); }
+        public GridLength C3Width { get => (GridLength)GetValue(C3WidthProperty); set => SetValue(C3WidthProperty, value); }
 
         public ICommand CloseCommand { get; }
         public ICommand MinCommand { get; }
@@ -60,9 +60,6 @@ namespace CodeMonitor.Views
             MinCommand = ReactiveCommand.Create(() => WindowState = WindowState.Minimized);
             MaxCommand = ReactiveCommand.Create(() => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized);
             InitializeComponent();
-#if DEBUG
-            this.AttachDevTools();
-#endif
         }
 
         private void InitializeComponent()
