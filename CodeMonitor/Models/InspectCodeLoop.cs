@@ -87,7 +87,8 @@ namespace CodeMonitor.Models
             {
                 FileName = $@"{Settings.RsCltPath}\inspectcode.exe",
                 CreateNoWindow = true,
-                RedirectStandardOutput = true
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
             };
 
             var args = new List<string>
@@ -96,6 +97,7 @@ namespace CodeMonitor.Models
                 $"--output={outFile}",
                 "--severity=WARNING",
                 "--format=Xml",
+                "--no-build"
             };
 
             var tryProfile = Path.Combine(Watch, Sln + ".DotSettings");
@@ -114,10 +116,21 @@ namespace CodeMonitor.Models
 
             args.ForEach(psi.ArgumentList.Add);
 
+            StringBuilder err = new StringBuilder();
+
+            File.Delete(outFile);
             var proc = Process.Start(psi);
             proc.OutputDataReceived += (o, e) => status.OnNext(e.Data);
+            proc.ErrorDataReceived += (o, e) => err.AppendLine(e.Data);
             proc.BeginOutputReadLine();
+            proc.BeginErrorReadLine();
             proc.WaitForExit();
+           
+            if(!File.Exists(outFile))
+            {
+                throw new Exception($"Resharper failed ({proc.ExitCode}): {err}");
+            }
+
             var xml = File.ReadAllText(outFile);
 
             var doc = XDocument.Parse(xml);
@@ -132,6 +145,7 @@ namespace CodeMonitor.Models
                                        Line: int.Parse(x.Attribute("Line")?.Value ?? "0"),
                                        Type: x.Attribute("TypeId").Value
                                    ))
+                                   .Where(x => x.Type != "CSharpErrors")
                                    .GroupBy(x => x.File)
                                    .ToDictionary(x => x.Key, x => x.Select(y => new InspectCodeProblem(y.Message, y.Line, y.Type)));
 

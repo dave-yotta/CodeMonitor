@@ -202,6 +202,46 @@
               </StackPanel>
             </Grid>
           </TabItem>
+	<TabItem Header="codeclimate">
+		  <Grid>
+
+			  <ListBox Items="{Binding ClimateProblemGroups}" Background="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Padding="0" Margin="0" BorderThickness="0">
+				  <ListBox.Styles>
+					  <Style Selector="ListBoxItem">
+						  <Setter Property="Template">
+							  <ControlTemplate TargetType="ListBoxItem">
+								  <Border Background="{TemplateBinding Background}" Margin="0,5,0,0" Padding="0,0,5,0">
+									  <ContentPresenter Background="Transparent" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"/>
+								  </Border>
+							  </ControlTemplate>
+						  </Setter>
+					  </Style>
+
+				  </ListBox.Styles>
+				  <ListBox.ItemTemplate>
+					  <DataTemplate>
+						  <StackPanel Orientation="Vertical">
+						  <TextBlock Text="{Binding Key}"/>
+						  <ItemsControl Margin="5,0,0,0" Items="{Binding Problems}">
+							  <ItemsControl.ItemTemplate>
+								  <DataTemplate>
+									  <StackPanel Orientation="Horizontal">
+										  <TextBlock Text="{Binding Category}" FontWeight="Bold"/>
+									      <TextBlock Text="{Binding Path}"/>
+										  <TextBlock Text="{Binding Debt}"/>
+									  </StackPanel>
+								  </DataTemplate>
+							    </ItemsControl.ItemTemplate>
+							</ItemsControl>
+						  </StackPanel>
+					  </DataTemplate>
+				  </ListBox.ItemTemplate>
+			  </ListBox>
+			  <StackPanel Orientation="Vertical" Grid.Column="1" Spacing="5" Margin="3,0,23,7" VerticalAlignment="Bottom" HorizontalAlignment="Right">
+				  <Button Background="{StaticResource tone2}" Command="{Binding QueryClimate}">Query</Button>
+			  </StackPanel>
+		  </Grid>
+		  </TabItem>
       </TabControl>
     </Border>
     <GridSplitter Classes="f" Grid.Column="1" Grid.Row="1" Width="3" Background="Transparent" VerticalAlignment="Stretch" Margin="0,0,-3,0"/>

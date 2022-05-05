@@ -23,5 +23,6 @@
     <PackageReference Include="DynamicData" Version="7.4.9" />
     <PackageReference Include="DynamicData.ReactiveUI" Version="6.11.0.2613" />
     <PackageReference Include="PropertyChanged.Fody" Version="3.4.0" />
+    <PackageReference Include="RestSharp" Version="107.3.0" />
   </ItemGroup>
 </Project>
